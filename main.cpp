@@ -1,75 +1,7 @@
 #include <iostream>
-#include <SDL2/SDL.h>
+#include "obj.cpp"
 
-class Draw{
-    public:
-        static void Circle(SDL_Renderer *rend, int posx, int posy, int rad){
-            for (int x = 0; x < 800; x++){
-                for (int y = 0; y < 800; y++){
-                    int sdf = SDL_sqrt((x-posx)*(x-posx) + (y-posy)*(y-posy)) - rad;
-                    if (sdf < 0){
-                        SDL_RenderDrawPoint(rend, x, y);
-                    }
-                }
-            }
-        }
-        static void CircleOutline(SDL_Renderer *rend, int posx, int posy, int rad, int str){
-            for (int x = 0; x < 800; x++){
-                for (int y = 0; y < 800; y++){
-                    int sdf = SDL_sqrt((x-posx)*(x-posx) + (y-posy)*(y-posy)) - rad;
-                    if (SDL_abs(sdf) < str){
-                        SDL_RenderDrawPoint(rend, x, y);
-                    }
-                }
-            }
-        }
-};
-
-class SDFObj{
-    public:
-        int r, g, b, a;
-        int val;
-
-        SDFObj(int r1, int g1, int b1, int a1) {
-            r = r1;
-            g = g1;
-            b = b1;
-            a = a1;
-            val = 2147483647;
-        }
-};
-
-class SDF{
-    public:
-        // Basic conjuctions
-        static SDFObj Min(SDFObj a, SDFObj b) {
-            if (a.val < b.val) {
-                return a;
-            }
-            return b;
-        }
-        // SDFs
-        static int Circle(int posx, int posy, int rad){
-            return SDL_sqrt(posx * posx + posy * posy) - rad;
-        }
-        // Map
-        static void Map(SDL_Renderer *rend, int x, int y) {
-            // Declare Starting variables
-            SDFObj fin = SDFObj(0, 0, 0, 255);
-            fin.val = 1;
-
-            SDFObj a = SDFObj(255, 0, 255, 255);
-            a.val = Circle(x - 400, y - 300, 10);
-
-            fin = Min(a, fin);
-
-            // Render the pixel
-            SDL_SetRenderDrawColor(rend, fin.r, fin.g, fin.b, fin.a);
-            SDL_RenderDrawPoint(rend, x, y);
-        }
-};
-
-const int WIDTH = 800, HEIGHT = 600;
+//const int WIDTH = 800, HEIGHT = 600; this is declared in draw for simplicity
 
 int main(int argsc, char *argsv[]) {
     SDL_Init( SDL_INIT_EVERYTHING );
@@ -87,17 +19,32 @@ int main(int argsc, char *argsv[]) {
 
     //float iTime = SDL_GetTicks();
 
+    Ball b = Ball(40, Vec2(HALF_WIDTH, HALF_HEIGHT), Vec2(20, 20), Vec4(0, 255, 255, 255));
+
     while (true) {
-        SDL_Delay(10);
+        SDL_Delay(1);
         //iTime = SDL_GetTicks64() * 0.001f;
 
         SDL_SetRenderDrawColor(rend, 0, 60, 180, 255);
         SDL_RenderClear(rend);
-        for (int x = 0; x < 800; x++){
-            for (int y = 0; y < 800; y++){
-                SDF::Map(rend, x, y);
-            }
-        }
+
+        SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
+        Draw::Circle(rend, Vec2(HALF_WIDTH, HALF_HEIGHT), 100);
+
+        int mx, my;
+        SDL_GetMouseState(&mx, &my);
+        Vec2<int> mouse(mx, my);
+        //int l = Vec::Length(mouse);
+        /*if (l > 60) {
+            mouse = Vec2(mouse.x / l, mouse.y / l);
+            mouse = Vec2(mouse.x * 60, mouse.y * 60);
+        }*/
+        b.SetPos(mouse + Vec2<int>::one * 10);
+        b.Draw(rend);
+
+        SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
+        Draw::CircleOutline(rend, Vec2(HALF_WIDTH, HALF_HEIGHT), 100, 10);
+
         SDL_RenderPresent(rend);
         if ( SDL_PollEvent( &windowEvent ) ) {
             if (SDL_QUIT == windowEvent.type) {
