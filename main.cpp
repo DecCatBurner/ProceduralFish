@@ -19,7 +19,16 @@ int main(int argsc, char *argsv[]) {
 
     //float iTime = SDL_GetTicks();
 
-    Ball b = Ball(40, Vec2(HALF_WIDTH, HALF_HEIGHT), Vec2(20, 20), Vec4(0, 255, 255, 255));
+    Vec4 chainColor = Vec4(0, 255, 255);
+
+    Chain b = Chain();
+    for (int i = 0; i < 3; i++){
+        b.segments[i] = Ball();
+    }
+    //Segment a, c, d;
+    //b.AddSegment(&a);
+    //b.AddSegment(&c);
+    //b.AddSegment(&d);
 
     while (true) {
         SDL_Delay(1);
@@ -28,22 +37,16 @@ int main(int argsc, char *argsv[]) {
         SDL_SetRenderDrawColor(rend, 0, 60, 180, 255);
         SDL_RenderClear(rend);
 
+        /*
         SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
         Draw::Circle(rend, Vec2(HALF_WIDTH, HALF_HEIGHT), 100);
-
+        */
+        SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
         int mx, my;
         SDL_GetMouseState(&mx, &my);
         Vec2<int> mouse(mx, my);
-        //int l = Vec::Length(mouse);
-        /*if (l > 60) {
-            mouse = Vec2(mouse.x / l, mouse.y / l);
-            mouse = Vec2(mouse.x * 60, mouse.y * 60);
-        }*/
-        b.SetPos(mouse + Vec2<int>::one * 10);
+        b.Move(Vec::Normalize(mouse - b.pos));
         b.Draw(rend);
-
-        SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
-        Draw::CircleOutline(rend, Vec2(HALF_WIDTH, HALF_HEIGHT), 100, 10);
 
         SDL_RenderPresent(rend);
         if ( SDL_PollEvent( &windowEvent ) ) {
