@@ -18,22 +18,27 @@ int main(int argsc, char *argsv[]) {
     // End init
 
     float circleSize = 12.5f;
+    float maxVelo = 2.0f;
+    float turnfactor = 0.125f;
 
     Segment tailSegments[50];
     for (int i = 0; i < sizeof(tailSegments)/sizeof(Segment); i++) {
         tailSegments[i] = Segment(Vector2(HALF_WIDTH, HALF_HEIGHT), circleSize * float(50-i)/50.0f, (i%2 == 1) ? Color(250, 100, 20, 255) : Color(200, 150, 30, 255));
     }
-    Cord snake = Cord();
-    snake.InitializeSegments(50, tailSegments);
 
-    for (int i = 0; i < sizeof(tailSegments)/sizeof(Segment); i++) {
-        tailSegments[i] = Segment(Vector2(HALF_WIDTH + 30, HALF_HEIGHT + 30), circleSize * float(50-i)/50.0f, (i%2 == 1) ? Color(30, 200, 100, 255) : Color(20, 220, 90, 255));
+    int snakeTotal = 4;
+    Cord snakes[4] = {Cord(), Cord(), Cord(), Cord()};
+
+    for (int i = 0; i < snakeTotal; i++) {
+        float rot = float(i)/snakeTotal * M_PI;
+        snakes[i].pos = origin + Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 10.0f;
+        snakes[i].velo = Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 10.0f;
+        snakes[i].InitializeSegments(50, tailSegments);
     }
-    Cord snake2 = Cord();
-    snake2.InitializeSegments(50, tailSegments);
 
     float itime = 0.0f;
     float dir = 1.0f;
+    bool pause = false;
 
     while (true) {
         SDL_Delay(1); //Wait each frame for consitancy
@@ -48,15 +53,37 @@ int main(int argsc, char *argsv[]) {
         int mx, my;
         SDL_GetMouseState(&mx, &my);
         Vector2 mouse = Vector2(mx, my);
+        if (!pause) {
+            // Find rules
+            Vector2 rule1 = zerozero;
+            Vector2 rule3 = zerozero;
+            for (int i = 0; i < snakeTotal; i++) {
+                //rule1 += snakes[i].pos;
+                rule3 += snakes[i].velo;
+            }
+            //rule1 /= snakeTotal;
+            rule3 /= snakeTotal;
 
-        // Set positions of snake parts
-        //snake.pos = snake.pos + mouse.Normalized()*25.0;
-        snake.Move((mouse - origin).Normalized() * 0.5f);
-        snake2.Move((mouse - origin + 30.0f).Normalized() * 0.5f);
-
+            // Set velo of snakes
+            for (int i = 0; i < snakeTotal; i++) {
+                //snakes[i].Move((mouse - origin + i*10.0f).Normalized() * 0.25f);
+                Vector2 rule2 = zerozero;
+                for (int j = 0; j < snakeTotal; j++) {
+                    if (i == j) {continue;}
+                    rule2 -= (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < 100.0f) ? (snakes[j].pos - snakes[i].pos) : zerozero;
+                }
+                snakes[i].velo += rule2*3.0f + rule3*0.001f;
+                if (snakes[i].pos.x > WIDTH - 50) { snakes[i].velo.x -= turnfactor; } else if (snakes[i].pos.x < 50) { snakes[i].velo.x += turnfactor; }
+                if (snakes[i].pos.y > HEIGHT - 50) { snakes[i].velo.y -= turnfactor; } else if (snakes[i].pos.y < 50) { snakes[i].velo.y += turnfactor; }
+                if (snakes[i].velo.SqMagnitude() > maxVelo*maxVelo) { snakes[i].velo = snakes[i].velo.Normalized() * maxVelo; }
+                //std::cout << i << snakes[i].pos.x << snakes[i].pos.y << std::endl;
+                snakes[i].Move();
+            }
+        }
         // Draw the snake
-        snake.Draw(rend);
-        snake2.Draw(rend);
+        for (int i = 0; i < snakeTotal; i++) {
+            snakes[i].Draw(rend);
+        }
 
         SDL_RenderPresent(rend); // Draw everything to screen
 
@@ -65,14 +92,15 @@ int main(int argsc, char *argsv[]) {
                 /* Keyboard event */
                 /* Pass the event data onto PrintKeyInfo() */
                 case SDL_KEYDOWN:
-                case SDL_KEYUP:
                     switch(windowEvent.key.keysym.sym) {
                         case SDLK_0:
-                            snake.Move(snake.segments[0].pos - origin);
+                            pause = !pause;
                             break;
                         default:
                             break;
                     }
+                    break;
+                case SDL_KEYUP:
                     break;
 
                 /* SDL_QUIT event (window close) */

@@ -19,7 +19,7 @@ class Draw{
         static void Circle8Lines(SDL_Renderer *rend, Vector2 center, Vector2 relative) {
             // Draw lines that are and aren't flipped about x=y until reach x=0
             int r = 0;
-            while (relative.x - r >= 0) {
+            while (relative.x - r >= -1) {
                 // Not flipped
                 SDL_RenderDrawPointF(rend, center.x+relative.x, center.y+relative.y-r);
                 SDL_RenderDrawPointF(rend, center.x-relative.x, center.y+relative.y-r);
@@ -33,7 +33,7 @@ class Draw{
                 r++;
             }
             // Continue for only lines that aren't flipped
-            while (relative.y - r >= 0) {
+            while (relative.y - r >= -1) {
                 // Not flipped
                 SDL_RenderDrawPointF(rend, center.x+relative.x, center.y+relative.y-r);
                 SDL_RenderDrawPointF(rend, center.x-relative.x, center.y+relative.y-r);

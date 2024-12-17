@@ -152,4 +152,7 @@ class Helpful{
         static float Distance(Vector2 a, Vector2 b) {
             return Magnitude(a.x - b.x, a.y - b.y);
         }
+        static float SqDistance(Vector2 a, Vector2 b) {
+            return SqMagnitude(a.x - b.x, a.y - b.y);
+        }
 };
