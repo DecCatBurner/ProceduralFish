@@ -1,157 +1,154 @@
 #include <math.h>
 
-template <typename T = int> class Vec2{
+class Vector2{
     public:
-        T x, y;
-        Vec2() : x(0), y(0) {}
-        Vec2(T v) : x(v), y(v) {}
-        Vec2(T x1, T y1) : x(x1), y(y1) {}
-        constexpr Vec2(char s, T x1, T y1) : x(x1), y(y1) {}
+        float x, y;
+        Vector2() : x(0.0f), y(0.0f) {}
+        Vector2(float v) : x(v), y(v) {}
+        Vector2(float x1, float y1) : x(x1), y(y1) {}
+        Vector2(int x1, int y1) : x(float(x1)), y(float(y1)) {}
+        constexpr Vector2(char s, float x1, float y1) : x(x1), y(y1) {}
 
-        static constexpr Vec2 zero = Vec2(' ', 0, 0);
-        static constexpr Vec2 one = Vec2(' ', 1, 1);
-        static constexpr Vec2 up = Vec2(' ', 0, 1);
-        static constexpr Vec2 down = Vec2(' ', 0, -1);
-        static constexpr Vec2 right = Vec2(' ', 1, 0);
-        static constexpr Vec2 left = Vec2(' ', -1, 0);
-
-        Vec2<int> operator + (const Vec2<int>& a) const {
-            Vec2<int> res;
+        // Operations---------------------------------------------------------
+        // Vec with Vec
+        Vector2 operator + (const Vector2& a) const {
+            Vector2 res;
             res.x = x + a.x;
             res.y = y + a.y;
             return res;
         }
-        Vec2<int> operator += (const Vec2<int>& a) const {
-            Vec2<int> res;
+        Vector2 operator += (const Vector2& a) const {
+            Vector2 res;
             res.x = x + a.x;
             res.y = y + a.y;
             return res;
         }
-        Vec2<int> operator - (const Vec2<int>& a) const {
-            Vec2<int> res;
+        Vector2 operator - (const Vector2& a) const {
+            Vector2 res;
             res.x = x - a.x;
             res.y = y - a.y;
             return res;
         }
-        Vec2<int> operator -= (const Vec2<int>& a) const {
-            Vec2<int> res;
+        Vector2 operator -= (const Vector2& a) const {
+            Vector2 res;
             res.x = x - a.x;
             res.y = y - a.y;
             return res;
-        }
-        
-        Vec2<int> operator + (const int& a) const {
-            Vec2<int> res;
-            res.x = x + a;
-            res.y = y + a;
-            return res;
-        }
-        Vec2<int> operator - (const int& a) const {
-            Vec2<int> res;
-            res.x = x - a;
-            res.y = y - a;
-            return res;
-        }
-        Vec2<int> operator * (const int& a) const {
-            Vec2<int> res;
-            res.x = x * a;
-            res.y = y * a;
-            return res;
-        }
-        Vec2<int> operator / (const int& a) const {
-            /*Vec2<int> res;
-            res.x = x / a;
-            res.y = y / a;*/
-            return Vec2<int>(x/a, y/a);
         }
 
-        Vec2<int> operator + (const float& a) const {
-            Vec2<int> res;
+        // Vec with float
+        Vector2 operator + (const float& a) const {
+            Vector2 res;
             res.x = x + a;
             res.y = y + a;
             return res;
         }
-        Vec2<int> operator - (const float& a) const {
-            Vec2<int> res;
+        Vector2 operator += (const float& a) const {
+            Vector2 res;
+            res.x = x + a;
+            res.y = y + a;
+            return res;
+        }
+        Vector2 operator - (const float& a) const {
+            Vector2 res;
             res.x = x - a;
             res.y = y - a;
             return res;
         }
-        Vec2<int> operator * (const float& a) const {
-            Vec2<int> res;
+        Vector2 operator -= (const float& a) const {
+            Vector2 res;
+            res.x = x - a;
+            res.y = y - a;
+            return res;
+        }
+        Vector2 operator * (const float& a) const {
+            Vector2 res;
             res.x = x * a;
             res.y = y * a;
             return res;
         }
-        Vec2<int> operator / (const float& a) const {
-            Vec2<int> res;
+        Vector2 operator *= (const float& a) const {
+            Vector2 res;
+            res.x = x * a;
+            res.y = y * a;
+            return res;
+        }
+        Vector2 operator / (const float& a) const {
+            Vector2 res;
             res.x = x / a;
             res.y = y / a;
             return res;
         }
+        Vector2 operator /= (const float& a) const {
+            Vector2 res;
+            res.x = x / a;
+            res.y = y / a;
+            return res;
+        }
+
+        float Magnitude() {
+            return sqrtf(x*x + y*y);
+        }
+
+        float SqMagnitude() {
+            return x*x + y*y;
+        }
+
+        Vector2 Normalized() {
+            float r = Magnitude();
+            return Vector2(x/r,y/r);
+        }
 };
 
-/*template <> class Vec2<int> {
+static constexpr Vector2 zero = Vector2(' ', 0.0f, 0.0f);
+static constexpr Vector2 one = Vector2(' ', 1.0f, 1.0f);
+static constexpr Vector2 up = Vector2(' ', 0.0f, 1.0f);
+static constexpr Vector2 down = Vector2(' ', 0.0f, -1.0f);
+static constexpr Vector2 right = Vector2(' ', 1.0f, 0.0f);
+static constexpr Vector2 left = Vector2(' ', -1.0f, 0.0f);
+
+class Color{
     public:
-        int x, y;
-        
-};*/
+        int r, g, b, a;
+        Color() : r(0), g(0), b(0), a(0) {}
+        Color(int v) : r(v), g(v), b(v), a(255) {}
+        Color(int r1, int g1, int b1, int a1 = 255) : r(r1), g(g1), b(b1), a(a1) {}
 
-template <typename T = int> class Vec3{
-    public:
-        T x, y, z;
-        Vec3() : x(0), y(0), z(0) {}
-        Vec3(T v) : x(v), y(v), z(v) {}
-        Vec3(T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
-        Vec3(T x1, T y1) : x(x1), y(y1), z(0) {}
-        Vec3(Vec2<T> vec) : x(vec.x), y(vec.y), z(0) {}
-
-        constexpr Vec3(char s, T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
-
-        static constexpr Vec3 zero = Vec3(' ', 0, 0, 0);
-        static constexpr Vec3 one = Vec3(' ', 1, 1, 1);
+        constexpr Color(char s, int r1, int g1, int b1, int a1 = 255) : r(r1), g(g1), b(b1), a(a1) {}
 };
 
-template <typename T = int> class Vec4{
+static constexpr Color black = Color(' ', 0, 0, 0);
+static constexpr Color red = Color(' ', 255, 0, 0);
+static constexpr Color yellow = Color(' ', 255, 255, 0);
+static constexpr Color green = Color(' ', 0, 255, 0);
+static constexpr Color cyan = Color(' ', 0, 255, 255);
+static constexpr Color blue = Color(' ', 0, 0, 255);
+static constexpr Color magenta = Color(' ', 255, 0, 255);
+static constexpr Color gray = Color(' ', 125, 125, 125);
+static constexpr Color grey = Color(' ', 125, 125, 125);
+static constexpr Color white = Color(' ', 255, 255, 255);
+
+class Helpful{
     public:
-        T r, g, b, a;
-        Vec4() : r(0), g(0), b(0), a(0) {}
-        Vec4(T v) : r(v), g(v), b(v), a(255) {}
-        Vec4(T r1, T g1, T b1, T a1 = 255) : r(r1), g(g1), b(b1), a(a1) {}
-        //Vec4(T r1, T g1, T b1) : r(r1), g(g1), b(b1), a(255) {}
-        Vec4(Vec3<T> color) : r(color.x), g(color.y), b(color.z), a(255) {}
-        Vec4(Vec3<T> color, T a1 = 255) : r(color.x), g(color.y), b(color.z), a(a1) {}
-
-        constexpr Vec4(char s, T r1, T g1, T b1, T a1 = 255) : r(r1), g(g1), b(b1), a(a1) {}
-
-        static constexpr Vec4 black = Vec4(' ', 0, 0, 0);
-        static constexpr Vec4 red = Vec4(' ', 255, 0, 0);
-        static constexpr Vec4 yellow = Vec4(' ', 255, 255, 0);
-        static constexpr Vec4 green = Vec4(' ', 0, 255, 0);
-        static constexpr Vec4 cyan = Vec4(' ', 0, 255, 255);
-        static constexpr Vec4 blue = Vec4(' ', 0, 0, 255);
-        static constexpr Vec4 magenta = Vec4(' ', 255, 0, 255);
-        static constexpr Vec4 gray = Vec4(' ', 125, 125, 125);
-        static constexpr Vec4 grey = Vec4(' ', 125, 125, 125);
-        static constexpr Vec4 white = Vec4(' ', 255, 255, 255);
-};
-
-class Vec{
-    public:
-        static int Length(Vec2<int> pos) {
-            return sqrt(pos.x * pos.x + pos.y * pos.y);
-        }
-        static int Length(int x, int y) {
-            return sqrt(x * x + y * y);
-        }
-        static Vec2<int> Normalize(Vec2<int> v){
-            int d = Length(v.x, v.y);
-            if (d == 0) { return Vec2<int>::zero; }
-            if (v.x == 0) { return Vec2<int>(0, v.y / d); }
-            if (v.y == 0) { return Vec2<int>(v.x / d, 0); }
-            return Vec2<int>(v.x / d, v.y / d);
-        }
-        static Vec2<int> Lerp(Vec2<int> a, Vec2<int> b, float t) {
+        static Vector2 Lerp(Vector2 a, Vector2 b, float t) {
             return a*(1.0f-t) + b*t;
+        }
+        static float Lerp(float a, float b, float t) {
+            return a*(1.0f-t) + b*t;
+        }
+        static float Magnitude(float x, float y) {
+            return sqrtf(x*x + y*y);
+        }
+        static float SqMagnitude(float x, float y) {
+            return x*x + y*y;
+        }
+        static int Magnitude(int x, int y) {
+            return int(sqrt(x*x + y*y));
+        }
+        static int SqMagnitude(int x, int y) {
+            return x*x + y*y;
+        }
+        static float Distance(Vector2 a, Vector2 b) {
+            return Magnitude(a.x - b.x, a.y - b.y);
         }
 };

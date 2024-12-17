@@ -1,69 +1,22 @@
-#include "baseObj.cpp"
+#include "draw.cpp"
 
-class Chain : public Ball{
+class Object{
     public:
-        // Properties
-        int maxDist = 20;
-        Ball segments[5];
-        // Declare
-        /*Chain() : firstSegment(nullptr), Ball() {}
-        Chain(Segment segment) : firstSegment(&segment), Ball() {}
-        Chain(Vec4<int> color, Segment* segment) : Ball(color), firstSegment(segment) {}
-        Chain(int size, Vec2<int> pos, Vec2<int> velo, Vec4<int> color, Segment* segment) : Ball(size, pos, velo, color), firstSegment(segment) {}
-        */
-        Chain() : Ball() {}
-        // Functions
-        /*void AddSegment(Segment* toAdd) {
-            Segment* currentSegment = firstSegment;
-            Segment* nextSegment = currentSegment->nextSegment;
-            while (nextSegment != nullptr) {
-                currentSegment = nextSegment;
-                nextSegment = currentSegment->nextSegment;
-            }
-            nextSegment = toAdd;
-        }*/
+        Vector2 pos;
+        float size;
 
-        void Move() {
-            // Move the focus
-            pos += velo;
-            bound();
-            // Move segments
-            Vec2<int> prevPos = pos;
-            for (Ball ball : segments) {
-                ball.SetPos(prevPos + Vec::Normalize(prevPos - ball.pos) * maxDist);
-                prevPos = ball.pos;
-            }
-        }
+        Object(Vector2 pos, float size) : pos(pos), size(size) {}
+};
 
-        void Move(Vec2<int> v) {
-            // Move the focus
-            pos += v;
-            bound();
-            // Move segments
-            Vec2<int> prevPos = pos;
-            for (Ball ball : segments) {
-                ball.SetPos(prevPos + Vec::Normalize(prevPos - ball.pos) * maxDist);
-                prevPos = ball.pos;
-            }
-        }
+class Ball : public Object {
+    public:
+        Color color;
 
-        void SetPos(Vec2<int> newPos) {
-            // Move the focus
-            pos = newPos;
-            // Move segments
-            Vec2<int> prevPos = pos;
-            for (Ball ball : segments) {
-                ball.SetPos(prevPos + Vec::Normalize(prevPos - ball.pos) * maxDist);
-                prevPos = ball.pos;
-            }
-        }
+        Ball() : Object(Vector2(HALF_WIDTH, HALF_HEIGHT), 50.0f), color(white) {}
+        Ball(Vector2 pos, float size, Color color) : Object(pos, size), color(color) {}
 
-        void Draw(SDL_Renderer *rend){
-            SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
-            Draw::Circle(rend, pos, size);
-
-            for (Ball b : segments) {
-                b.Draw(rend, color);
-            }
+        void Draw(SDL_Renderer *rend) {
+            Draw::SetColor(rend, color);
+            Draw::CircleFilled(rend, pos, size);
         }
 };
