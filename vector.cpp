@@ -1,4 +1,9 @@
 #include <math.h>
+#include <iostream>
+
+// Screen const
+const int WIDTH = 800, HEIGHT = 600;
+const int HALF_WIDTH = 400, HALF_HEIGHT = 300;
 
 class Vector2{
     public:
@@ -8,6 +13,7 @@ class Vector2{
         Vector2(float x1, float y1) : x(x1), y(y1) {}
         Vector2(int x1, int y1) : x(float(x1)), y(float(y1)) {}
         constexpr Vector2(char s, float x1, float y1) : x(x1), y(y1) {}
+        constexpr Vector2(char s, int x1, int y1) : x(float(x1)), y(float(y1)) {}
 
         // Operations---------------------------------------------------------
         // Vec with Vec
@@ -17,11 +23,10 @@ class Vector2{
             res.y = y + a.y;
             return res;
         }
-        Vector2 operator += (const Vector2& a) const {
-            Vector2 res;
-            res.x = x + a.x;
-            res.y = y + a.y;
-            return res;
+        Vector2& operator += (const Vector2& a) {
+            this->x = x + a.x;
+            this->y = y + a.y;
+            return *this;
         }
         Vector2 operator - (const Vector2& a) const {
             Vector2 res;
@@ -29,11 +34,10 @@ class Vector2{
             res.y = y - a.y;
             return res;
         }
-        Vector2 operator -= (const Vector2& a) const {
-            Vector2 res;
-            res.x = x - a.x;
-            res.y = y - a.y;
-            return res;
+        Vector2& operator -= (const Vector2& a) {
+            this->x = x - a.x;
+            this->y = y - a.y;
+            return *this;
         }
 
         // Vec with float
@@ -43,11 +47,10 @@ class Vector2{
             res.y = y + a;
             return res;
         }
-        Vector2 operator += (const float& a) const {
-            Vector2 res;
-            res.x = x + a;
-            res.y = y + a;
-            return res;
+        Vector2& operator += (const float& a) {
+            this->x = x + a;
+            this->y = y + a;
+            return *this;
         }
         Vector2 operator - (const float& a) const {
             Vector2 res;
@@ -55,11 +58,10 @@ class Vector2{
             res.y = y - a;
             return res;
         }
-        Vector2 operator -= (const float& a) const {
-            Vector2 res;
-            res.x = x - a;
-            res.y = y - a;
-            return res;
+        Vector2& operator -= (const float& a) {
+            this->x = x - a;
+            this->y = y - a;
+            return *this;
         }
         Vector2 operator * (const float& a) const {
             Vector2 res;
@@ -67,11 +69,10 @@ class Vector2{
             res.y = y * a;
             return res;
         }
-        Vector2 operator *= (const float& a) const {
-            Vector2 res;
-            res.x = x * a;
-            res.y = y * a;
-            return res;
+        Vector2& operator *= (const float& a) {
+            this->x = x * a;
+            this->y = y * a;
+            return *this;
         }
         Vector2 operator / (const float& a) const {
             Vector2 res;
@@ -79,11 +80,10 @@ class Vector2{
             res.y = y / a;
             return res;
         }
-        Vector2 operator /= (const float& a) const {
-            Vector2 res;
-            res.x = x / a;
-            res.y = y / a;
-            return res;
+        Vector2& operator /= (const float& a) {
+            this->x = x / a;
+            this->y = y / a;
+            return *this;
         }
 
         float Magnitude() {
@@ -100,8 +100,9 @@ class Vector2{
         }
 };
 
-static constexpr Vector2 zero = Vector2(' ', 0.0f, 0.0f);
-static constexpr Vector2 one = Vector2(' ', 1.0f, 1.0f);
+static constexpr Vector2 zerozero = Vector2(' ', 0.0f, 0.0f);
+static constexpr Vector2 oneone = Vector2(' ', 1.0f, 1.0f);
+static constexpr Vector2 origin = Vector2(' ', HALF_WIDTH, HALF_HEIGHT);
 static constexpr Vector2 up = Vector2(' ', 0.0f, 1.0f);
 static constexpr Vector2 down = Vector2(' ', 0.0f, -1.0f);
 static constexpr Vector2 right = Vector2(' ', 1.0f, 0.0f);

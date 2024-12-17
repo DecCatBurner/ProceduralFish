@@ -1,22 +1,64 @@
 #include "draw.cpp"
 
-class Object{
+class Point{
     public:
         Vector2 pos;
-        float size;
 
-        Object(Vector2 pos, float size) : pos(pos), size(size) {}
+        Point(Vector2 pos) : pos(pos) {}
 };
 
-class Ball : public Object {
+class Segment : public Point {
     public:
         Color color;
+        float size, separation;
 
-        Ball() : Object(Vector2(HALF_WIDTH, HALF_HEIGHT), 50.0f), color(white) {}
-        Ball(Vector2 pos, float size, Color color) : Object(pos, size), color(color) {}
+        Segment() : Point(origin), size(25.0f), separation(25.0f), color(white) {}
+        Segment(Vector2 pos, float radius, Color color) : Point(pos), size(radius), separation(radius), color(color) {}
+        Segment(Vector2 pos, float size, float separation, Color color) : Point(pos), size(size), separation(separation), color(color) {}
 
         void Draw(SDL_Renderer *rend) {
             Draw::SetColor(rend, color);
             Draw::CircleFilled(rend, pos, size);
+        }
+};
+
+class Cord : public Point {
+    public:
+        int length = 0;
+        Segment* segments;
+
+        Cord() : Point(origin) {}
+        Cord(Vector2 pos) : Point(pos) {}
+
+        ~Cord() { delete[] segments; }
+
+        void InitializeSegments(int len, Segment* segs) {
+            length = len;
+            segments = new Segment[len];
+            for (int i = 0; i < len; i++) {
+                segments[i] = segs[i];
+            }
+            segments[0].pos = pos;
+        }
+
+        void Move(Vector2 velo) {
+            if (length == 0) {std::cout << "You need to initialize a cord first" << std::endl; return;}
+            // Set positions of snake parts
+            pos += velo;
+            segments[0].pos = pos;
+            float mag;
+            for (int i = 1; i < length; i++) {
+                mag = Helpful::Distance(segments[i-1].pos, segments[i].pos);
+                if (mag > segments[i].separation + segments[i-1].separation) {
+                    segments[i].pos = segments[i-1].pos + (segments[i].pos - segments[i-1].pos).Normalized() * (segments[i].separation + segments[i-1].separation);
+                }
+            }
+        }
+
+        void Draw(SDL_Renderer *rend) {
+            if (length == 0) {std::cout << "You need to initialize a cord first" << std::endl; return;}
+            for (int i = length-1; i >= 0; i--) {
+                segments[i].Draw(rend);
+            }
         }
 };

@@ -1,9 +1,6 @@
 #include <SDL2/SDL.h>
 #include "vector.cpp"
 
-const int WIDTH = 800, HEIGHT = 600;
-const int HALF_WIDTH = 400, HALF_HEIGHT = 300;
-
 class Draw{
     public:
         static void Circle8Points(SDL_Renderer *rend, Vector2 center, Vector2 relative) {
