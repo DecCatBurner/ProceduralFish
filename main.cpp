@@ -85,6 +85,7 @@ int main(int argsc, char *argsv[]) {
             snakes[i].Draw(rend);
         }
 
+
         SDL_RenderPresent(rend); // Draw everything to screen
 
         if (SDL_PollEvent( &windowEvent )) {

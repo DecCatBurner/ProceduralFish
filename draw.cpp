@@ -3,6 +3,7 @@
 
 class Draw{
     public:
+        /// Bresenham’s circle drawing algorithm
         static void Circle8Points(SDL_Renderer *rend, Vector2 center, Vector2 relative) {
             // Draw points on each quadrant
             SDL_RenderDrawPointF(rend, center.x+relative.x, center.y+relative.y);
@@ -16,6 +17,7 @@ class Draw{
             SDL_RenderDrawPointF(rend, center.x-relative.y, center.y-relative.x);
 
         }
+
         static void Circle8Lines(SDL_Renderer *rend, Vector2 center, Vector2 relative) {
             // Draw lines that are and aren't flipped about x=y until reach x=0
             int r = 0;
@@ -42,6 +44,7 @@ class Draw{
                 r++;
             }
         }
+
         static void CircleOutline(SDL_Renderer *rend, Vector2 pos, float r){
             float x, y = r;
             float d = 3.0f - (2.0f*r);
@@ -72,6 +75,30 @@ class Draw{
             Circle8Lines(rend, pos, Vector2(x,y));
         }
 
+        /// Bresenham's Line Algorithm
+        static void Line(SDL_Renderer *rend, Vector2 a, Vector2 b) {
+            int x1, y1, x2, y2;
+            if (a.x <= b.x) {
+                x1 = a.x, y1 = a.y, x2 = b.x, y2 = b.y;
+            } else {
+                x2 = a.x, y2 = a.y, x1 = b.x, y1 = b.y;
+            }
+            // Take m = y2-y1/x2-x1 > 0.5 and multiply by 2*(x2-x1) to avoid f-point
+            int slope = 2 * (y2 - y1);
+            int dy = (y1 < y2) ? 1 : -1;
+            int mult = 2 * (x2 - x1);
+            int error = slope - (x2 - x1);
+            for (int x = x1, y = y1; x <= x2; x++) {
+                SDL_RenderDrawPoint(rend, x, y);
+                error += slope;
+                if (error >= 0) {
+                    y+=dy;
+                    error -= mult;
+                }
+            }
+        }
+
+        // Basic Functionality
         static void SetColor(SDL_Renderer *rend, Color c) {
             SDL_SetRenderDrawColor(rend, c.r, c.g, c.b, c.a);
         }
