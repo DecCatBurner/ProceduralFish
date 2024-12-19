@@ -1,6 +1,4 @@
-#include "obj.cpp"
-
-//const int WIDTH = 800, HEIGHT = 600; this is declared in draw for simplicity
+#include "boid.cpp"
 
 int main(int argsc, char *argsv[]) {
     SDL_Init( SDL_INIT_EVERYTHING );
@@ -20,13 +18,6 @@ int main(int argsc, char *argsv[]) {
     // End init
 
     float circleSize = 12.5f;
-    float maxVelo = 0.5f;
-    float cohesionFactor = 0.00001f;
-    float sight = 25.0f;
-    float alignmentFactor = 0.001f;
-    float turnFactor = 0.00625f;
-    float separationDist = 15.0f;
-    float separationFactor = 1.5f;
 
     int tailTotal = 5;
     Segment tailSegments[5];
@@ -38,16 +29,18 @@ int main(int argsc, char *argsv[]) {
     Cord snakes[20] = {Cord()};
 
     for (int i = 0; i < snakeTotal; i++) {
-        float rot = float(i)/snakeTotal * M_PI;
-        snakes[i].pos = origin + Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 30.0f;
-        snakes[i].velo = Vector2(SDL_sinf(rot), SDL_cosf(rot)) * maxVelo;
+        float rot = float(i)/snakeTotal * 2.0f * M_PI;
+        snakes[i].pos = origin + Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 60.0f;
+        snakes[i].velo = Vector2(SDL_sinf(rot), SDL_cosf(rot)) * Boid::maxVelo;
         snakes[i].InitializeSegments(tailTotal, tailSegments);
     }
 
+    Boid::InitializeBoids(snakeTotal, snakes);
+
     float itime = 0.0f;
-    float dir = 1.0f;
     bool pause = false;
 
+    // Test line algorithm
     Draw::SetColor(red);
     Draw::Line(origin, origin+oneone*10.0f);
     Draw::Line(origin, origin+Vector2(1,-1)*10.0f);
@@ -57,10 +50,6 @@ int main(int argsc, char *argsv[]) {
     while (true) {
         SDL_Delay(1); //Wait each frame for consitancy
 
-        //Clear Screen each frame
-        SDL_SetRenderDrawColor(rend, 0, 60, 180, 255);
-        SDL_RenderClear(rend);
-
         itime += 0.1f;
 
         // Initial Mouse State
@@ -68,47 +57,31 @@ int main(int argsc, char *argsv[]) {
         SDL_GetMouseState(&mx, &my);
         Vector2 mouse = Vector2(mx, my);
         if (!pause) {
-            // Find rules
-            Vector2 rule3 = zerozero;
-            for (int i = 0; i < snakeTotal; i++) {
-                rule3 += snakes[i].velo;
-            }
-            rule3 /= snakeTotal;
-
-            // Set velo of snakes
-            for (int i = 0; i < snakeTotal; i++) {
-                //snakes[i].Move((mouse - origin + i*10.0f).Normalized() * 0.25f);
-                Vector2 rule1 = zerozero;
-                Vector2 rule2 = zerozero;
-                for (int j = 0; j < snakeTotal; j++) {
-                    if (i == j) {continue;}
-                    rule1 += (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < sight*sight) ? snakes[j].pos : zerozero;
-                    rule2 -= (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < separationDist*separationDist) ? (snakes[j].pos - snakes[i].pos) : zerozero;
-                }
-                rule1 /= snakeTotal - 1;
-                snakes[i].velo += rule1*cohesionFactor + rule2*separationFactor + rule3*alignmentFactor;
-                if (snakes[i].pos.x > WIDTH - 50) { snakes[i].velo.x -= turnFactor; } else if (snakes[i].pos.x < 50) { snakes[i].velo.x += turnFactor; }
-                if (snakes[i].pos.y > HEIGHT - 50) { snakes[i].velo.y -= turnFactor; } else if (snakes[i].pos.y < 50) { snakes[i].velo.y += turnFactor; }
-                if (snakes[i].velo.SqMagnitude() > maxVelo*maxVelo) { snakes[i].velo = snakes[i].velo.Normalized() * maxVelo; }
-                //std::cout << i << snakes[i].pos.x << snakes[i].pos.y << std::endl;
-                snakes[i].Move();
-            }
+            // Set velo of boids
+            Boid::EvaluateBoids();
         }
+
+        // Clear Screen each frame
+        SDL_SetRenderDrawColor(rend, 0, 60, 180, 255);
+        SDL_RenderClear(rend);
+
         // Draw scene
         Draw::SetColor(grey);
         Draw::CircleFilled(Vector2(200, 400), 50.0f);
         Draw::CircleFilled(Vector2(600, 100), 40.0f);
         Draw::CircleFilled(Vector2(650, 100), 10.0f);
-        Draw::CircleFilled(Vector2(550, 110), 10.0f);
+        Draw::CircleFilled(Vector2(550, 150), 10.0f);
         Draw::CircleFilled(Vector2(620, 80), 5.0f);
 
         // Draw the snake
-        for (int i = 0; i < snakeTotal; i++) {
-            snakes[i].Draw();
-        }
+        Boid::DrawBoids();
+
+        // Draw Overlay
 
 
-        SDL_RenderPresent(rend); // Draw everything to screen */
+        // Render scene
+        SDL_RenderPresent( rend );
+        // end of section */
 
         if (SDL_PollEvent( &windowEvent )) {
             switch(windowEvent.type ){
@@ -116,8 +89,12 @@ int main(int argsc, char *argsv[]) {
                 /* Pass the event data onto PrintKeyInfo() */
                 case SDL_KEYDOWN:
                     switch(windowEvent.key.keysym.sym) {
-                        case SDLK_0:
+                        case SDLK_p:
                             pause = !pause;
+                            break;
+                        case SDLK_c:
+                            Draw::TakeScreenShot(window, itime);
+                            std::cout << "Snap taken at: " << itime << std::endl;
                             break;
                         default:
                             break;

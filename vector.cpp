@@ -96,9 +96,14 @@ class Vector2{
 
         Vector2 Normalized() {
             float r = Magnitude();
+            if (r == 0.0f) {return Vector2(0,0);}
             return Vector2(x/r,y/r);
         }
 };
+
+std::ostream& operator << (std::ostream &os, Vector2 const &a) { 
+    return os << "(" << a.x << ", " << a.y << ")";
+}
 
 static constexpr Vector2 zerozero = Vector2(' ', 0.0f, 0.0f);
 static constexpr Vector2 oneone = Vector2(' ', 1.0f, 1.0f);

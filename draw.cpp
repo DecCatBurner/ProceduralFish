@@ -127,4 +127,12 @@ class Draw{
         static void SetColor(Color c) {
             SDL_SetRenderDrawColor(rendGlobal, c.r, c.g, c.b, c.a);
         }
+
+        static void TakeScreenShot(SDL_Window* window, float itime) {
+            SDL_Surface *sshot = SDL_GetWindowSurface(window);
+            SDL_RenderReadPixels(rendGlobal, NULL, SDL_GetWindowPixelFormat(window), sshot->pixels, sshot->pitch);
+            std::string file = ("Screenshots\\screenshot" + std::to_string(itime) + ".bmp");
+            SDL_SaveBMP(sshot, file.c_str());
+            SDL_FreeSurface(sshot);
+        }
 };
