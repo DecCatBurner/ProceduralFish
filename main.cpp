@@ -9,6 +9,8 @@ int main(int argsc, char *argsv[]) {
 
     SDL_Renderer *rend = SDL_CreateRenderer(window, -1, 1);
 
+    Draw::SetRend(rend);
+
     if (window == NULL) {
         std::cout << "Could not create window: " << SDL_GetError() << std::endl;
         return 1;
@@ -18,27 +20,39 @@ int main(int argsc, char *argsv[]) {
     // End init
 
     float circleSize = 12.5f;
-    float maxVelo = 2.0f;
-    float turnfactor = 0.125f;
+    float maxVelo = 0.5f;
+    float cohesionFactor = 0.00001f;
+    float sight = 25.0f;
+    float alignmentFactor = 0.001f;
+    float turnFactor = 0.00625f;
+    float separationDist = 15.0f;
+    float separationFactor = 1.5f;
 
-    Segment tailSegments[50];
-    for (int i = 0; i < sizeof(tailSegments)/sizeof(Segment); i++) {
-        tailSegments[i] = Segment(Vector2(HALF_WIDTH, HALF_HEIGHT), circleSize * float(50-i)/50.0f, (i%2 == 1) ? Color(250, 100, 20, 255) : Color(200, 150, 30, 255));
+    int tailTotal = 5;
+    Segment tailSegments[5];
+    for (int i = 0; i < tailTotal; i++) {
+        tailSegments[i] = Segment(Vector2(HALF_WIDTH, HALF_HEIGHT), circleSize * float(tailTotal-SDL_abs(i-tailTotal+4))/tailTotal, (i%2 == 1) ? Color(250, 100, 20, 255) : Color(200, 150, 30, 255));
     }
 
-    int snakeTotal = 4;
-    Cord snakes[4] = {Cord(), Cord(), Cord(), Cord()};
+    int snakeTotal = 20;
+    Cord snakes[20] = {Cord()};
 
     for (int i = 0; i < snakeTotal; i++) {
         float rot = float(i)/snakeTotal * M_PI;
-        snakes[i].pos = origin + Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 10.0f;
-        snakes[i].velo = Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 10.0f;
-        snakes[i].InitializeSegments(50, tailSegments);
+        snakes[i].pos = origin + Vector2(SDL_sinf(rot), SDL_cosf(rot)) * 30.0f;
+        snakes[i].velo = Vector2(SDL_sinf(rot), SDL_cosf(rot)) * maxVelo;
+        snakes[i].InitializeSegments(tailTotal, tailSegments);
     }
 
     float itime = 0.0f;
     float dir = 1.0f;
     bool pause = false;
+
+    Draw::SetColor(red);
+    Draw::Line(origin, origin+oneone*10.0f);
+    Draw::Line(origin, origin+Vector2(1,-1)*10.0f);
+
+    SDL_RenderPresent(rend);
 
     while (true) {
         SDL_Delay(1); //Wait each frame for consitancy
@@ -55,38 +69,46 @@ int main(int argsc, char *argsv[]) {
         Vector2 mouse = Vector2(mx, my);
         if (!pause) {
             // Find rules
-            Vector2 rule1 = zerozero;
             Vector2 rule3 = zerozero;
             for (int i = 0; i < snakeTotal; i++) {
-                //rule1 += snakes[i].pos;
                 rule3 += snakes[i].velo;
             }
-            //rule1 /= snakeTotal;
             rule3 /= snakeTotal;
 
             // Set velo of snakes
             for (int i = 0; i < snakeTotal; i++) {
                 //snakes[i].Move((mouse - origin + i*10.0f).Normalized() * 0.25f);
+                Vector2 rule1 = zerozero;
                 Vector2 rule2 = zerozero;
                 for (int j = 0; j < snakeTotal; j++) {
                     if (i == j) {continue;}
-                    rule2 -= (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < 100.0f) ? (snakes[j].pos - snakes[i].pos) : zerozero;
+                    rule1 += (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < sight*sight) ? snakes[j].pos : zerozero;
+                    rule2 -= (Helpful::SqDistance(snakes[i].pos, snakes[j].pos) < separationDist*separationDist) ? (snakes[j].pos - snakes[i].pos) : zerozero;
                 }
-                snakes[i].velo += rule2*3.0f + rule3*0.001f;
-                if (snakes[i].pos.x > WIDTH - 50) { snakes[i].velo.x -= turnfactor; } else if (snakes[i].pos.x < 50) { snakes[i].velo.x += turnfactor; }
-                if (snakes[i].pos.y > HEIGHT - 50) { snakes[i].velo.y -= turnfactor; } else if (snakes[i].pos.y < 50) { snakes[i].velo.y += turnfactor; }
+                rule1 /= snakeTotal - 1;
+                snakes[i].velo += rule1*cohesionFactor + rule2*separationFactor + rule3*alignmentFactor;
+                if (snakes[i].pos.x > WIDTH - 50) { snakes[i].velo.x -= turnFactor; } else if (snakes[i].pos.x < 50) { snakes[i].velo.x += turnFactor; }
+                if (snakes[i].pos.y > HEIGHT - 50) { snakes[i].velo.y -= turnFactor; } else if (snakes[i].pos.y < 50) { snakes[i].velo.y += turnFactor; }
                 if (snakes[i].velo.SqMagnitude() > maxVelo*maxVelo) { snakes[i].velo = snakes[i].velo.Normalized() * maxVelo; }
                 //std::cout << i << snakes[i].pos.x << snakes[i].pos.y << std::endl;
                 snakes[i].Move();
             }
         }
+        // Draw scene
+        Draw::SetColor(grey);
+        Draw::CircleFilled(Vector2(200, 400), 50.0f);
+        Draw::CircleFilled(Vector2(600, 100), 40.0f);
+        Draw::CircleFilled(Vector2(650, 100), 10.0f);
+        Draw::CircleFilled(Vector2(550, 110), 10.0f);
+        Draw::CircleFilled(Vector2(620, 80), 5.0f);
+
         // Draw the snake
         for (int i = 0; i < snakeTotal; i++) {
-            snakes[i].Draw(rend);
+            snakes[i].Draw();
         }
 
 
-        SDL_RenderPresent(rend); // Draw everything to screen
+        SDL_RenderPresent(rend); // Draw everything to screen */
 
         if (SDL_PollEvent( &windowEvent )) {
             switch(windowEvent.type ){

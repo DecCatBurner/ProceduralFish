@@ -23,9 +23,9 @@ class Segment : public Point {
         Segment(Vector2 pos, float radius, Color color) : Point(pos), size(radius), separation(radius), color(color) {}
         Segment(Vector2 pos, float size, float separation, Color color) : Point(pos), size(size), separation(separation), color(color) {}
 
-        void Draw(SDL_Renderer *rend) {
-            Draw::SetColor(rend, color);
-            Draw::CircleFilled(rend, pos, size);
+        void Draw() {
+            Draw::SetColor(color);
+            Draw::CircleFilled(pos, size);
         }
 };
 
@@ -77,10 +77,17 @@ class Cord : public KinematicPoint {
             }
         }
 
-        void Draw(SDL_Renderer *rend) {
+        void Draw() {
             if (length == 0) {std::cout << "You need to initialize a cord first" << std::endl; return;}
-            for (int i = length-1; i >= 0; i--) {
-                segments[i].Draw(rend);
+
+            for (int i = length-1; i > 0; i--) {
+                segments[i].Draw();
+                Draw::SetColor(white);
+                Vector2 diff = segments[i-1].pos - segments[i].pos;
+                Vector2 side1 = Vector2(diff.y, diff.x*-1);
+                Vector2 side2 = Vector2(diff.y*-1, diff.x);
+                Draw::Line(side1 + segments[i].pos, side2 + segments[i].pos);
             }
+            segments[0].Draw();
         }
 };
