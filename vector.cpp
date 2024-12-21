@@ -113,6 +113,105 @@ static constexpr Vector2 down = Vector2(' ', 0.0f, -1.0f);
 static constexpr Vector2 right = Vector2(' ', 1.0f, 0.0f);
 static constexpr Vector2 left = Vector2(' ', -1.0f, 0.0f);
 
+class IntVector2{
+    public:
+        int x, y;
+
+        IntVector2() : x(0), y(0) {}
+        IntVector2(int v) : x(v), y(v) {}
+        IntVector2(int x, int y) : x(x), y(y) {}
+        IntVector2(float x, float y) : x(SDL_round(x)), y(SDL_round(y)) {}
+
+                // Operations---------------------------------------------------------
+        // Vec with Vec
+        IntVector2 operator + (const IntVector2& a) const {
+            IntVector2 res;
+            res.x = x + a.x;
+            res.y = y + a.y;
+            return res;
+        }
+        IntVector2& operator += (const IntVector2& a) {
+            this->x = x + a.x;
+            this->y = y + a.y;
+            return *this;
+        }
+        IntVector2 operator - (const IntVector2& a) const {
+            IntVector2 res;
+            res.x = x - a.x;
+            res.y = y - a.y;
+            return res;
+        }
+        IntVector2& operator -= (const IntVector2& a) {
+            this->x = x - a.x;
+            this->y = y - a.y;
+            return *this;
+        }
+
+        // Vec with float
+        IntVector2 operator + (const int& a) const {
+            IntVector2 res;
+            res.x = x + a;
+            res.y = y + a;
+            return res;
+        }
+        IntVector2& operator += (const int& a) {
+            this->x = x + a;
+            this->y = y + a;
+            return *this;
+        }
+        IntVector2 operator - (const int& a) const {
+            IntVector2 res;
+            res.x = x - a;
+            res.y = y - a;
+            return res;
+        }
+        IntVector2& operator -= (const int& a) {
+            this->x = x - a;
+            this->y = y - a;
+            return *this;
+        }
+        IntVector2 operator * (const int& a) const {
+            IntVector2 res;
+            res.x = x * a;
+            res.y = y * a;
+            return res;
+        }
+        IntVector2& operator *= (const int& a) {
+            this->x = x * a;
+            this->y = y * a;
+            return *this;
+        }
+        IntVector2 operator / (const int& a) const {
+            IntVector2 res;
+            res.x = x / a;
+            res.y = y / a;
+            return res;
+        }
+        IntVector2& operator /= (const int& a) {
+            this->x = x / a;
+            this->y = y / a;
+            return *this;
+        }
+
+        // Bitwise
+        IntVector2 operator << (const int& a) const {
+            IntVector2 res;
+            res.x = x << a;
+            res.y = y << a;
+            return res;
+        }
+        IntVector2 operator >> (const int& a) const {
+            IntVector2 res;
+            res.x = x >> a;
+            res.y = y >> a;
+            return res;
+        }
+};
+
+std::ostream& operator << (std::ostream &os, IntVector2 const &a) { 
+    return os << "Int(" << a.x << ", " << a.y << ")";
+}
+
 class Color{
     public:
         int r, g, b, a;
@@ -136,12 +235,14 @@ static constexpr Color white = Color(' ', 255, 255, 255);
 
 class Helpful{
     public:
+        // Interpolation
         static Vector2 Lerp(Vector2 a, Vector2 b, float t) {
             return a*(1.0f-t) + b*t;
         }
         static float Lerp(float a, float b, float t) {
             return a*(1.0f-t) + b*t;
         }
+        // Magnitudes and Lengths
         static float Magnitude(float x, float y) {
             return sqrtf(x*x + y*y);
         }
@@ -160,4 +261,17 @@ class Helpful{
         static float SqDistance(Vector2 a, Vector2 b) {
             return SqMagnitude(a.x - b.x, a.y - b.y);
         }
+        // Min || Max
+        static int Min(int a, int b) {
+            return (a <= b) ? a : b;
+        }
+        static int Max(int a, int b) {
+            return (a >= b) ? a : b;
+        }
 };
+
+/*
+ * I don't care to impliment rotation matrices
+ * so remember that r(pheta) = [ [cos -sin] [sin cos] ] in form [ [a b] [c d] ]
+ * and is applied to a vector as [x y] * [ [cos -sin] [sin cos] ] = [(x*cos + y*sin) (x*cos - y*sin)]
+*/

@@ -20,13 +20,14 @@ int main(int argsc, char *argsv[]) {
     float circleSize = 12.5f;
 
     int tailTotal = 5;
-    Segment tailSegments[5];
-    for (int i = 0; i < tailTotal; i++) {
+    Segment tailSegments[3];
+    tailSegments[0] = HeadSegment(Vector2(HALF_WIDTH, HALF_HEIGHT), circleSize * float(tailTotal-SDL_abs(-tailTotal+4))/tailTotal, Color(200, 150, 30, 255));
+    for (int i = 1; i < tailTotal; i++) {
         tailSegments[i] = Segment(Vector2(HALF_WIDTH, HALF_HEIGHT), circleSize * float(tailTotal-SDL_abs(i-tailTotal+4))/tailTotal, (i%2 == 1) ? Color(250, 100, 20, 255) : Color(200, 150, 30, 255));
     }
 
-    int snakeTotal = 20;
-    Cord snakes[20] = {Cord()};
+    int snakeTotal = 2;
+    Cord snakes[2] = {Cord()};
 
     for (int i = 0; i < snakeTotal; i++) {
         float rot = float(i)/snakeTotal * 2.0f * M_PI;
@@ -41,9 +42,11 @@ int main(int argsc, char *argsv[]) {
     bool pause = false;
 
     // Test line algorithm
-    Draw::SetColor(red);
-    Draw::Line(origin, origin+oneone*10.0f);
-    Draw::Line(origin, origin+Vector2(1,-1)*10.0f);
+    Draw::SetColor(green);
+    //Draw::Line(origin, origin+oneone*10.0f);
+    //Draw::Line(origin, origin+Vector2(1,-1)*10.0f);
+
+    Draw::TriangleFilled(origin + Vector2(10, 10), origin + Vector2(1, -10), origin + Vector2(-10, 9));
 
     SDL_RenderPresent(rend);
 
@@ -77,7 +80,6 @@ int main(int argsc, char *argsv[]) {
         Boid::DrawBoids();
 
         // Draw Overlay
-
 
         // Render scene
         SDL_RenderPresent( rend );

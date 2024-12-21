@@ -23,9 +23,28 @@ class Segment : public Point {
         Segment(Vector2 pos, float radius, Color color) : Point(pos), size(radius), separation(radius), color(color) {}
         Segment(Vector2 pos, float size, float separation, Color color) : Point(pos), size(size), separation(separation), color(color) {}
 
-        void Draw() {
+        virtual void Draw() {
             Draw::SetColor(color);
             Draw::CircleFilled(pos, size);
+        }
+
+        virtual void Draw(Vector2 dir) {
+            //Draw::SetColor(color);
+            //Draw::CircleFilled(pos, size);
+        }
+};
+
+class HeadSegment : public Segment {
+    public:
+        HeadSegment() : Segment() {}
+        HeadSegment(Vector2 pos, float radius, Color color) : Segment(pos, radius, color) {}
+
+        void Draw(Vector2 dir) override {
+            //Draw::SetColor(color);
+            //Draw::CircleFilled(pos, size);
+            Draw::SetColor(black);
+            Draw::CircleFilled(pos + Vector2(dir.x * (0.707106781f) + dir.y * (0.707106781f), dir.x * (0.707106781f) - dir.y * (0.707106781f)), 7.0f);
+            Draw::CircleFilled(pos + Vector2(dir.x * (0.707106781f) - dir.y * (0.707106781f), dir.x * (0.707106781f) + dir.y * (0.707106781f)), 7.0f);
         }
 };
 
@@ -79,15 +98,25 @@ class Cord : public KinematicPoint {
 
         void Draw() {
             if (length == 0) {std::cout << "You need to initialize a cord first" << std::endl; return;}
-
+            Vector2 diff = (segments[length-2].pos - segments[length-1].pos) * (segments[length-2].size / (segments[length-2].size + segments[length-1].size));
+            Vector2 prevL = segments[length-1].pos - diff, prevR = segments[length-1].pos - diff;
             for (int i = length-1; i > 0; i--) {
-                segments[i].Draw();
-                Draw::SetColor(white);
-                Vector2 diff = segments[i-1].pos - segments[i].pos;
-                Vector2 side1 = Vector2(diff.y, diff.x*-1);
-                Vector2 side2 = Vector2(diff.y*-1, diff.x);
-                Draw::Line(side1 + segments[i].pos, side2 + segments[i].pos);
+                Vector2 diff = (segments[i-1].pos - segments[i].pos) * (segments[i].size / (segments[i-1].size + segments[i].size));
+                segments[i].Draw(diff);
+                Draw::SetColor(segments[i].color);
+                Vector2 sideL = Vector2(diff.y*-1, diff.x) + segments[i].pos; // -90 degree
+                Vector2 sideR = Vector2(diff.y, diff.x*-1) + segments[i].pos; // +90 degree
+                Draw::TriangleFilled(sideR, prevL, sideL);
+                Draw::TriangleFilled(prevR, prevL, sideR);
+                prevL = sideL;
+                prevR = sideR;
             }
-            segments[0].Draw();
+            diff = (segments[0].pos - segments[1].pos) * (segments[0].size / (segments[0].size + segments[1].size));
+            //Vector2 sideL = Vector2(diff.y, diff.x*-1);
+            //Vector2 sideR = Vector2(diff.y*-1, diff.x);
+            segments[0].Draw(diff);
+            Draw::SetColor(segments[0].color);
+            Draw::Line(segments[0].pos + diff, prevL);
+            Draw::Line(segments[0].pos + diff, prevR);
         }
 };

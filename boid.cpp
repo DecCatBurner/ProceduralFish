@@ -6,7 +6,7 @@ class Boid {
         static inline int boidTotal = 0;
         static inline Vector2 rule1 = zerozero, rule2 = zerozero, rule3 = zerozero, rule4 = zerozero;
     public:
-        static constexpr int boundDist = 50;
+        static constexpr int boundDist = -20;
         static constexpr float maxVelo = 3.0f;
         static constexpr float cohesionFactor = 0.001f;
         static constexpr float sight = 25.0f;
