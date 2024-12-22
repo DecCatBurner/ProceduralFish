@@ -174,7 +174,8 @@ class Draw{
             }
         }
 
-        /// Half-Edge Algorithm
+        /// Quad Half-Edge Algorithm
+        static constexpr int q = 8; // Save compute, must be pow-2
         // Points must be clockwise (based on half-edge algorithm)
         static void TriangleFilled(Vector2 a, Vector2 b, Vector2 c) {
             // Vector2[3] = Sort(a,b,c) * not needed conveniently
@@ -194,8 +195,11 @@ class Draw{
             const IntVector2 FdCA = dCA << 4;
 
             // Bounds
-            IntVector2 minBound = (IntVector2(Helpful::Min(Helpful::Min(A.x, B.x), C.x), Helpful::Min(Helpful::Min(A.y, B.y), C.y)) + 15) >> 4;
-            IntVector2 maxBound = (IntVector2(Helpful::Max(Helpful::Max(A.x, B.x), C.x), Helpful::Max(Helpful::Max(A.y, B.y), C.y)) + 15) >> 4;
+            IntVector2 minBound = (IntVector2(Helpful::Min(Helpful::Min(A.x, B.x), C.x), Helpful::Min(Helpful::Min(A.y, B.y), C.y)) + 0xF) >> 4;
+            IntVector2 maxBound = (IntVector2(Helpful::Max(Helpful::Max(A.x, B.x), C.x), Helpful::Max(Helpful::Max(A.y, B.y), C.y)) + 0xF) >> 4;
+
+            minBound &= ~(q - 1);
+
             // Half-Edge Constants
             int CA = dAB.y * A.x - dAB.x * A.y;
             int CB = dBC.y * B.x - dBC.x * B.y;
@@ -206,31 +210,65 @@ class Draw{
             if (dBC.y < 0 || (dBC.y == 0 && dBC.x > 0)) CB++;
             if (dCA.y < 0 || (dCA.y == 0 && dCA.x > 0)) CC++;
 
-            int CAy = CA + dAB.x * (minBound.y << 4) - dAB.y * (minBound.x << 4);
-            int CBy = CB + dBC.x * (minBound.y << 4) - dBC.y * (minBound.x << 4);
-            int CCy = CC + dCA.x * (minBound.y << 4) - dCA.y * (minBound.x << 4);
-
             //std::cout << minBound << maxBound << CAy << A << CBy << B << CCy << C << std::endl;
             // Fill Triangle
-            for (int y = minBound.y; y < maxBound.y; y++) {
-                int CAx = CAy;
-                int CBx = CBy;
-                int CCx = CCy;
+            for (int y = minBound.y; y < maxBound.y; y+=q) {
+                for (int x = minBound.x; x < maxBound.x; x+=q) {
+                    // Corners of quad
+                    IntVector2 start = IntVector2(x, y) << 4;
+                    IntVector2 end = start + ((q - 1) << 4);
 
-                for (int x = minBound.x; x < maxBound.x; x++) {
-                    if (CAx > 0 && CBx > 0 && CCx > 0) {
-                        std::cout << "Draw " << x << ", " << y << std::endl;
-                        SDL_RenderDrawPoint(rendGlobal, x, y);
+                    // Evaluate constants per point
+                    bool ASS = CA + dAB.x * start.y - dAB.y * start.x > 0;
+                    bool AES = CA + dAB.x * start.y - dAB.y * end.x > 0;
+                    bool AEE = CA + dAB.x * end.y - dAB.y * end.x > 0;
+                    bool ASE = CA + dAB.x * end.y - dAB.y * start.x > 0;
+                    int EvalA = (ASS << 0) | (AES << 1) | (ASE << 2) | (AEE << 3);
+
+                    bool BSS = CA + dBC.x * start.y - dBC.y * start.x > 0;
+                    bool BES = CA + dBC.x * start.y - dBC.y * end.x > 0;
+                    bool BEE = CA + dBC.x * end.y - dBC.y * end.x > 0;
+                    bool BSE = CA + dBC.x * end.y - dBC.y * start.x > 0;
+                    int EvalB = (BSS << 0) | (BES << 1) | (BSE << 2) | (BEE << 3);
+
+                    bool CSS = CA + dCA.x * start.y - dCA.y * start.x > 0;
+                    bool CES = CA + dCA.x * start.y - dCA.y * end.x > 0;
+                    bool CEE = CA + dCA.x * end.y - dCA.y * end.x > 0;
+                    bool CSE = CA + dCA.x * end.y - dCA.y * start.x > 0;
+                    int EvalC = (CSS << 0) | (CES << 1) | (CSE << 2) | (CEE << 3);
+
+                    std::cout << EvalA << EvalB << EvalC << std::endl;
+                    if (EvalA == 0x0 || EvalB == 0x0 || EvalC == 0x0) continue;
+                    if (EvalA == 0xF && EvalB == 0xF && EvalC == 0xF) {
+                        std::cout << "Full" << std::endl;
+                        for (int j = y; j < q + y; j++) {
+                            for (int i = x; i < q + x; i++) {
+                                SDL_RenderDrawPoint(rendGlobal, i, j);
+                            }
+                        }
+                    } else {
+                        std::cout << "Part" << std::endl;
+                        int CAy = CA + dAB.x * start.y - dAB.y * start.x;
+                        int CBy = CB + dBC.x * start.y - dBC.y * start.x;
+                        int CCy = CC + dCA.x * start.y - dCA.y * start.x;
+                        for (int j = y; j < q + y; j++) {
+                            int CAx = CAy;
+                            int CBx = CBy;
+                            int CCx = CCy;
+                            for (int i = x; i < q + x; i++) {
+                                if (CAx > 0 && CBx > 0 && CCx > 0) {
+                                    SDL_RenderDrawPoint(rendGlobal, i, j);
+                                }
+                                CAx -= FdAB.y;
+                                CBx -= FdBC.y;
+                                CCx -= FdCA.y;
+                            }
+                            CAy += FdAB.x;
+                            CBy += FdBC.x;
+                            CCy += FdCA.x;
+                        }
                     }
-
-                    CAx -= FdAB.y;
-                    CBx -= FdBC.y;
-                    CCx -= FdCA.y;
                 }
-
-                CAy += FdAB.x;
-                CBy += FdBC.x;
-                CCy += FdCA.x;
             }
         }
 

@@ -192,6 +192,17 @@ class IntVector2{
             this->y = y / a;
             return *this;
         }
+        IntVector2 operator & (const int& a) const {
+            IntVector2 res;
+            res.x = x & a;
+            res.y = y & a;
+            return res;
+        }
+        IntVector2& operator &= (const int& a) {
+            this->x = x & a;
+            this->y = y & a;
+            return *this;
+        }
 
         // Bitwise
         IntVector2 operator << (const int& a) const {
