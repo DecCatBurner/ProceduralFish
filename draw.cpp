@@ -123,54 +123,57 @@ class Draw{
             }
         }
 
-        static void LineFilled(Vector2 a, Vector2 b) {
+        /// Use vertical pairings, a.y == b.y 
+        static void FilledDouble(Vector2 a, Vector2 mid, Vector2 b) {
             // Take m = (y2-y1)/(x2-x1) > 0.5 and multiply by 2*(x2-x1) to avoid f-point
-            int dydt = SDL_abs(a.y - b.y); // Change in y per step
-            int dxdt = SDL_abs(a.x - b.x); // Change in x per step
+            IntVector2 dAdt = IntVector2(SDL_abs(a.x - mid.x), SDL_abs(a.y - mid.y)); // Change in the line (x && y) per step
+            IntVector2 dBdt = IntVector2(SDL_abs(b.x - mid.x), SDL_abs(b.y - mid.y)); // Change in the line (x && y) per step
             // Declare var for use
-            int x1, y1, x2, y2;
-            if (dydt > dxdt) { // When the change in y is greater
-                if (a.y <= b.y) {
-                    x1 = a.x, y1 = a.y, x2 = b.x, y2 = b.y;
-                } else {
-                    x2 = a.x, y2 = a.y, x1 = b.x, y1 = b.y;
-                }
-                int dx = (x1 < x2) ? 1 : -1;
-                int error = 2*dxdt - dydt;
-                for (int x = x1, y = y1; y <= y2; y++) {
-                    SDL_RenderDrawPoint(rendGlobal, x, y);
-                    error += 2*dxdt;
-                    if (error >= 0) {
-                        x+=dx;
-                        error -= 2*dydt;
-                        // Slide the line along the major axis to zero
-                        for (int slide = y2; slide >= y1; slide--) {
-                            SDL_RenderDrawPoint(rendGlobal, x, slide);
-                        }
-                    }
-                    //std::cout << x << "," << y << "e" << error << std::endl;
-                }
+            IntVector2 A1, A2, B1, B2;
+            
+            if (a.x <= mid.x) {
+                A1 = IntVector2(a);
+                A2 = IntVector2(mid);
             } else {
-                if (a.x <= b.x) {
-                    x1 = a.x, y1 = a.y, x2 = b.x, y2 = b.y;
-                } else {
-                    x2 = a.x, y2 = a.y, x1 = b.x, y1 = b.y;
+                A2 = IntVector2(a);
+                A1 = IntVector2(mid);
+            }
+            if (b.x <= mid.x) {
+                B1 = IntVector2(b);
+                B2 = IntVector2(mid);
+            } else {
+                B2 = IntVector2(b);
+                B1 = IntVector2(mid);
+            }
+            int Ady = (A1.y < A2.y) ? 1 : -1; // Step direction for A.y
+            int Bdy = (B1.y < B2.y) ? 1 : -1; // Step direction for A.y
+            int errorA = 2*dAdt.y - dAdt.x; // Track how close to next jump
+            int errorB = 2*dBdt.y - dBdt.x; // Track how close to next jump
+            for (int x = A1.x, y = A1.y; x <= A2.x; x++) { // Remember A.y == B.y
+                bool drawline = false;
+                SDL_RenderDrawPoint(rendGlobal, x, y);
+                errorA += 2*dAdt.y;
+                errorB += 2*dBdt.y;
+                Loop:
+                if (errorA >= 0) {
+                    y+=Ady;
+                    errorA -= 2*dAdt.x;
+                    drawline = true;
                 }
-                int dy = (y1 < y2) ? 1 : -1;
-                int error = 2*dydt - dxdt;
-                for (int x = x1, y = y1; x <= x2; x++) {
-                    SDL_RenderDrawPoint(rendGlobal, x, y);
-                    error += 2*dydt;
-                    if (error >= 0) {
-                        y+=dy;
-                        error -= 2*dxdt;
-                        // Slide the line along the major axis to zero
-                        for (int slide = x; slide >= x1; slide--) {
-                            SDL_RenderDrawPoint(rendGlobal, slide, y);
-                        }
+                if (errorB >= 0) {
+                    y+=Bdy;
+                    errorB -= 2*dBdt.x;
+                    drawline = true;
+                }
+                if (drawline) {
+                    for (int slide = x; slide >= A1.x; slide--) {
+                        SDL_RenderDrawPoint(rendGlobal, slide, y);
                     }
-                    //std::cout << x << "," << y << "e" << error << std::endl;
+                    if (errorA >= 0 || errorB >= 0) {
+                        goto Loop;
+                    }
                 }
+                //std::cout << x << "," << y << "e" << error << std::endl;
             }
         }
 
@@ -178,98 +181,10 @@ class Draw{
         static constexpr int q = 8; // Save compute, must be pow-2
         // Points must be clockwise (based on half-edge algorithm)
         static void TriangleFilled(Vector2 a, Vector2 b, Vector2 c) {
-            // Vector2[3] = Sort(a,b,c) * not needed conveniently
-            // Increase percision by 4 bits
-            const IntVector2 A = IntVector2(16.0f * a.x, 16.0f * a.y); // acts like << 4
-            const IntVector2 B = IntVector2(16.0f * b.x, 16.0f * b.y); // acts like << 4
-            const IntVector2 C = IntVector2(16.0f * c.x, 16.0f * c.y); // acts like << 4
+            // Split triange into two with flat top
+            // Handle bresenham double abad
 
-            // dx and dy
-            const IntVector2 dAB = A - B;
-            const IntVector2 dBC = B - C;
-            const IntVector2 dCA = C - A;
-
-            // Fixed-point
-            const IntVector2 FdAB = dAB << 4;
-            const IntVector2 FdBC = dBC << 4;
-            const IntVector2 FdCA = dCA << 4;
-
-            // Bounds
-            IntVector2 minBound = (IntVector2(Helpful::Min(Helpful::Min(A.x, B.x), C.x), Helpful::Min(Helpful::Min(A.y, B.y), C.y)) + 0xF) >> 4;
-            IntVector2 maxBound = (IntVector2(Helpful::Max(Helpful::Max(A.x, B.x), C.x), Helpful::Max(Helpful::Max(A.y, B.y), C.y)) + 0xF) >> 4;
-
-            minBound &= ~(q - 1);
-
-            // Half-Edge Constants
-            int CA = dAB.y * A.x - dAB.x * A.y;
-            int CB = dBC.y * B.x - dBC.x * B.y;
-            int CC = dCA.y * C.x - dCA.x * C.y;
-
-            // Overfill and Gap Correction
-            if (dAB.y < 0 || (dAB.y == 0 && dAB.x > 0)) CA++;
-            if (dBC.y < 0 || (dBC.y == 0 && dBC.x > 0)) CB++;
-            if (dCA.y < 0 || (dCA.y == 0 && dCA.x > 0)) CC++;
-
-            //std::cout << minBound << maxBound << CAy << A << CBy << B << CCy << C << std::endl;
-            // Fill Triangle
-            for (int y = minBound.y; y < maxBound.y; y+=q) {
-                for (int x = minBound.x; x < maxBound.x; x+=q) {
-                    // Corners of quad
-                    IntVector2 start = IntVector2(x, y) << 4;
-                    IntVector2 end = start + ((q - 1) << 4);
-
-                    // Evaluate constants per point
-                    bool ASS = CA + dAB.x * start.y - dAB.y * start.x > 0;
-                    bool AES = CA + dAB.x * start.y - dAB.y * end.x > 0;
-                    bool AEE = CA + dAB.x * end.y - dAB.y * end.x > 0;
-                    bool ASE = CA + dAB.x * end.y - dAB.y * start.x > 0;
-                    int EvalA = (ASS << 0) | (AES << 1) | (ASE << 2) | (AEE << 3);
-
-                    bool BSS = CA + dBC.x * start.y - dBC.y * start.x > 0;
-                    bool BES = CA + dBC.x * start.y - dBC.y * end.x > 0;
-                    bool BEE = CA + dBC.x * end.y - dBC.y * end.x > 0;
-                    bool BSE = CA + dBC.x * end.y - dBC.y * start.x > 0;
-                    int EvalB = (BSS << 0) | (BES << 1) | (BSE << 2) | (BEE << 3);
-
-                    bool CSS = CA + dCA.x * start.y - dCA.y * start.x > 0;
-                    bool CES = CA + dCA.x * start.y - dCA.y * end.x > 0;
-                    bool CEE = CA + dCA.x * end.y - dCA.y * end.x > 0;
-                    bool CSE = CA + dCA.x * end.y - dCA.y * start.x > 0;
-                    int EvalC = (CSS << 0) | (CES << 1) | (CSE << 2) | (CEE << 3);
-
-                    std::cout << EvalA << EvalB << EvalC << std::endl;
-                    if (EvalA == 0x0 || EvalB == 0x0 || EvalC == 0x0) continue;
-                    if (EvalA == 0xF && EvalB == 0xF && EvalC == 0xF) {
-                        std::cout << "Full" << std::endl;
-                        for (int j = y; j < q + y; j++) {
-                            for (int i = x; i < q + x; i++) {
-                                SDL_RenderDrawPoint(rendGlobal, i, j);
-                            }
-                        }
-                    } else {
-                        std::cout << "Part" << std::endl;
-                        int CAy = CA + dAB.x * start.y - dAB.y * start.x;
-                        int CBy = CB + dBC.x * start.y - dBC.y * start.x;
-                        int CCy = CC + dCA.x * start.y - dCA.y * start.x;
-                        for (int j = y; j < q + y; j++) {
-                            int CAx = CAy;
-                            int CBx = CBy;
-                            int CCx = CCy;
-                            for (int i = x; i < q + x; i++) {
-                                if (CAx > 0 && CBx > 0 && CCx > 0) {
-                                    SDL_RenderDrawPoint(rendGlobal, i, j);
-                                }
-                                CAx -= FdAB.y;
-                                CBx -= FdBC.y;
-                                CCx -= FdCA.y;
-                            }
-                            CAy += FdAB.x;
-                            CBy += FdBC.x;
-                            CCy += FdCA.x;
-                        }
-                    }
-                }
-            }
+            // Handle bresenham double cbcd
         }
 
         // Basic Functionality

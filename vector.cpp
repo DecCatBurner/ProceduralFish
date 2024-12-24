@@ -121,6 +121,7 @@ class IntVector2{
         IntVector2(int v) : x(v), y(v) {}
         IntVector2(int x, int y) : x(x), y(y) {}
         IntVector2(float x, float y) : x(SDL_round(x)), y(SDL_round(y)) {}
+        IntVector2(Vector2 a) : x(int(a.x)), y(int(a.y)) {}
 
                 // Operations---------------------------------------------------------
         // Vec with Vec
